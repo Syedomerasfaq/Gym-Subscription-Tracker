@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="ISO-8859-1">
+    <title>Update Subscribers</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            width: 80%;
+            margin: auto;
+            overflow: hidden;
+        }
+        header {
+            background: #333;
+            color: #fff;
+            padding: 20px 0;
+            text-align: center;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .form-container {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+        }
+        label {
+            display: block;
+            margin: 10px 0 5px;
+        }
+        input[type="text"],
+        input[type="date"],
+        select {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #333;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #555;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="container">
+        <h1>Update Subscriber</h1>
+    </div>
+</header>
+
+<div class="container">
+    <div class="form-container">
+        <form id="userForm">
+
+            <label for="id">Id :</label>
+            <input type="text" id="id" name="id" th:value="${userId}" readonly/>
+
+            <label for="name">Name :</label>
+            <input type="text" id="name" name="name" th:value="${userName}"/>
+
+            <label for="startDate">Start Date</label>
+            <input type="date" id="startDate" name="startDate" th:value="${startDate}"/>
+
+            <label for="endDate">End Date</label>
+            <input type="date" id="endDate" name="endDate" th:value="${endDate}"/>
+
+            <label for="frequency">Subscription Frequency:</label>
+            <select id="frequency" name="frequency">
+                <option value="" th:selected="${frequency == ''}">Select...</option>
+                <option value="Monthly" th:selected="${frequency == 'Monthly'}">Monthly</option>
+                <option value="Three-Months" th:selected="${frequency == 'Three-Months'}">Three-Months</option>
+                <option value="Six-Months" th:selected="${frequency == 'Six-Months'}">Six-Months</option>
+                <option value="Yearly" th:selected="${frequency == 'Yearly'}">Yearly</option>
+            </select>
+
+            <label for="type">Subscription Type:</label>
+            <select id="type" name="type">
+                <option value="" th:selected="${type == ''}">Select...</option>
+                <option value="Personal Training" th:selected="${type == 'Personal Training'}">Personal Training</option>
+                <option value="General Training" th:selected="${type == 'General Training'}">General Training</option>
+            </select>
+
+            <button type="button" onclick="submitForm()">Submit</button>
+        </form>
+    </div>
+</div>
+
+<script>
+
+    document.addEventListener('DOMContentLoaded', function() {
+        var frequency = /*[[${frequency}]]*/ '';
+        var type = /*[[${type}]]*/ '';
+
+        if (frequency) {
+            document.getElementById('frequency').value = frequency;
+        }
+
+        if (type) {
+            document.getElementById('type').value = type;
+        }
+    });
+
+    function submitForm() {
+        const form = document.getElementById('userForm');
+        const formData = new FormData(form);
+        const data = {};
+
+        formData.forEach((value, key) => {
+            data[key] = value;
+        });
+
+        const userId = document.getElementById('id').value;
+
+        // Check if userId is provided
+        if (!userId) {
+            console.error('User ID is required.');
+            return;
+        }
+        fetch(`/users/${userId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            } else {
+                throw new Error('Network response was not ok.');
+            }
+        })
+        .then(data => {
+            console.log('Success:', data);
+             window.location.href = '/userslist';
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            // Handle errors
+        });
+    }
+</script>
+
+</body>
+</html>
