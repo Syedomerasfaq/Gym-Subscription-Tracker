@@ -26,8 +26,8 @@ public class UsersController {
     }
 
     @GetMapping("/users")
-    public ResponseEntity<List<UsersDto>> getUsers(){
-        List<Users> usersList = userService.getUsers();
+    public ResponseEntity<List<UsersDto>> getUsers(@RequestParam(name = "sortColumn", required = false) String sortColumn , @RequestParam(name = "sortOrder", required = false) String sortOrder){
+        List<Users> usersList = userService.getUsers(sortColumn,sortOrder);
         List<UsersDto> usersDtoList = new ArrayList<>();
         for (Users users : usersList){
             usersDtoList.add(usersMapper.mapTo(users));
@@ -79,5 +79,19 @@ public class UsersController {
        }
        else
            return new ResponseEntity<>(null,HttpStatus.NOT_FOUND);
+    }
+
+    @GetMapping("/users/findByName")
+    public ResponseEntity<List<UsersDto>> findUsersByName(@RequestParam(name = "name", required = false) String name,@RequestParam(name = "sortColumn", required = false) String sortColumn , @RequestParam(name = "sortOrder", required = false) String sortOrder) {
+        if (userService.getUsersByName(name,sortColumn,sortOrder)!=null){
+            List<Users> usersList = userService.getUsersByName(name,sortColumn,sortOrder);
+            List<UsersDto> usersDtoList = new ArrayList<>();
+            for (Users users : usersList){
+                usersDtoList.add(usersMapper.mapTo(users));
+            }
+            return new ResponseEntity<>(usersDtoList,HttpStatus.OK);
+        }
+        else
+            return new ResponseEntity<>(null,HttpStatus.NOT_FOUND);
     }
 }

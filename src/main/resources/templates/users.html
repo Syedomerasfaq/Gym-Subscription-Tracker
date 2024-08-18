@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Subscribers List</title>
@@ -21,11 +21,14 @@
             padding-top: 30px;
             min-height: 70px;
             border-bottom: #fff 3px solid;
-            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
             position: relative;
         }
         header h1 {
             margin: 0;
+            padding-left: 600px;
             font-size: 24px;
         }
         .back-arrow-button {
@@ -43,6 +46,28 @@
         .back-arrow-button:hover {
             color: #ccc; /* Lighter color on hover */
         }
+        .search-bar {
+            display: flex;
+            align-items: center;
+        }
+        .search-bar input[type="text"] {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px 0 0 4px;
+            outline: none;
+        }
+        .search-bar button {
+            padding: 8px 12px;
+            border: none;
+            background-color: #4169E1;
+            color: white;
+            cursor: pointer;
+            border-radius: 0 4px 4px 0;
+            transition: background-color 0.3s ease;
+        }
+        .search-bar button:hover {
+            background-color: #3558c4;
+        }
         table {
             width: 100%;
             border-collapse: collapse;
@@ -58,6 +83,7 @@
         th {
             background-color: #333;
             color: #fff;
+            cursor: pointer;
         }
         tr:nth-child(even) {
             background-color: #f2f2f2;
@@ -89,16 +115,21 @@
         .update-button:hover {
             background-color: #c0392b;
         }
+        .sort-icon {
+            margin-left: 5px;
+        }
     </style>
 </head>
 <body>
 
 <header>
-    <div class="container">
-        <h1>Subscribers List</h1>
-        <button onclick="window.location.href='/'" class="back-arrow-button">
-            &#9664; <!-- Left arrow symbol -->
-        </button>
+    <button onclick="window.location.href='/'" class="back-arrow-button">
+        &#9664; <!-- Left arrow symbol -->
+    </button>
+    <h1>Subscribers List</h1>
+    <div class="search-bar">
+        <input type="text" placeholder="Search by name..." id="searchInput">
+        <button onclick="searchUsers()">Search</button>
     </div>
 </header>
 
@@ -106,19 +137,19 @@
     <table id="usersTable">
         <thead>
         <tr>
-            <th>Id</th>
-            <th>Name</th>
-            <th>Start Date</th>
-            <th>End Date</th>
-            <th>Frequency</th>
-            <th>Type</th>
+            <th onclick="sortTable('id')">Id <span id="idSort" class="sort-icon"></span></th>
+            <th onclick="sortTable('name')">Name <span id="nameSort" class="sort-icon"></span></th>
+            <th onclick="sortTable('startDate')">Start Date <span id="startDateSort" class="sort-icon"></span></th>
+            <th onclick="sortTable('endDate')">End Date <span id="endDateSort" class="sort-icon"></span></th>
+            <th onclick="sortTable('frequency')">Frequency <span id="frequencySort" class="sort-icon"></span></th>
+            <th onclick="sortTable('type')">Type <span id="typeSort" class="sort-icon"></span></th>
             <th>Update</th>
             <th>Delete</th>
         </tr>
         </thead>
         <tbody>
         <tr>
-            <td colspan="7" class="no-data">Loading...</td>
+            <td colspan="8" class="no-data">Loading...</td>
         </tr>
         </tbody>
     </table>
@@ -126,17 +157,28 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        let sortOrder = 'asc';
+        let sortColumn = '';
+
         fetchUsers();
 
-        function fetchUsers() {
-            fetch('/users')
+        function fetchUsers(query = '', sortColumn = '', sortOrder = '') {
+            let url = `/users`;
+            if (query){
+                 url += `/findByName?name=${query}&sortColumn=${sortColumn}&sortOrder=${sortOrder}`;
+            }
+            else{
+                url += `?sortColumn=${sortColumn}&sortOrder=${sortOrder}`;
+            }
+
+            fetch(url)
                 .then(response => response.json())
                 .then(users => {
                     const tableBody = document.querySelector('#usersTable tbody');
                     tableBody.innerHTML = ''; // Clear the loading row
 
                     if (users.length === 0) {
-                        tableBody.innerHTML = '<tr><td colspan="7" class="no-data">No users found</td></tr>';
+                        tableBody.innerHTML = '<tr><td colspan="8" class="no-data">No users found</td></tr>';
                     } else {
                         users.forEach(user => {
                             const row = document.createElement('tr');
@@ -147,8 +189,8 @@
                                 <td>${new Date(user.endDate).toLocaleDateString()}</td>
                                 <td>${user.frequency}</td>
                                 <td>${user.type}</td>
-                                <td><button class="delete-button" data-id="${user.id}">Delete</button></td>
                                 <td><button class="update-button" data-id="${user.id}">Update</button></td>
+                                <td><button class="delete-button" data-id="${user.id}">Delete</button></td>
                             `;
                             tableBody.appendChild(row);
                         });
@@ -173,7 +215,7 @@
                 .catch(error => {
                     console.error('Error fetching user data:', error);
                     const tableBody = document.querySelector('#usersTable tbody');
-                    tableBody.innerHTML = '<tr><td colspan="7" class="no-data">Error loading data</td></tr>';
+                    tableBody.innerHTML = '<tr><td colspan="8" class="no-data">Error loading data</td></tr>';
                 });
         }
 
@@ -192,6 +234,31 @@
                 console.error('Error deleting user:', error);
             });
         }
+
+        window.searchUsers = function() {
+            const query = document.getElementById('searchInput').value.trim();
+            fetchUsers(query, sortColumn, sortOrder);
+        };
+
+        window.sortTable = function(column) {
+            if (sortColumn === column) {
+                sortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortOrder = 'asc';
+            }
+            sortColumn = column;
+
+            // Reset other sort icons
+            document.querySelectorAll('.sort-icon').forEach(icon => {
+                icon.textContent = '';
+            });
+
+            // Set the current sort icon
+            const sortIcon = document.getElementById(`${column}Sort`);
+            sortIcon.textContent = sortOrder === 'asc' ? '▼' : '▲';
+
+            fetchUsers(document.getElementById('searchInput').value.trim(), sortColumn, sortOrder);
+        };
     });
 </script>
 
